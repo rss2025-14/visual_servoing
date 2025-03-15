@@ -1,0 +1,126 @@
+sift tests
+python3 cv_test.py cone sift
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  3
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  2
+[SIFT] not enough matches; matches:  3
+[SIFT] not enough matches; matches:  2
+[SIFT] not enough matches; matches:  5
+[SIFT] not enough matches; matches:  3
+[SIFT] not enough matches; matches:  4
+[SIFT] not enough matches; matches:  6
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  2
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  7
+('./test_images_cone/test1.jpg', 0.0)
+('./test_images_cone/test2.jpg', 0.0)
+('./test_images_cone/test3.jpg', 0.0)
+('./test_images_cone/test4.jpg', 0.0)
+('./test_images_cone/test5.jpg', 0.0)
+('./test_images_cone/test6.jpg', 0.0)
+('./test_images_cone/test7.jpg', 0.0)
+('./test_images_cone/test8.jpg', 0.0)
+('./test_images_cone/test9.jpg', 0.0)
+('./test_images_cone/test10.jpg', 0.0)
+('./test_images_cone/test11.jpg', 0.0)
+('./test_images_cone/test12.jpg', 0.0)
+('./test_images_cone/test13.jpg', 0.0)
+('./test_images_cone/test14.jpg', 0.0)
+('./test_images_cone/test15.jpg', 0.0)
+('./test_images_cone/test16.jpg', 0.0)
+('./test_images_cone/test17.jpg', 0.0)
+('./test_images_cone/test18.jpg', 0.0)
+('./test_images_cone/test19.jpg', 0.0)
+('./test_images_cone/test20.jpg', 0.0)
+python3 cv_test.py citgo sift
+[SIFT] not enough matches; matches:  2
+[SIFT] not enough matches; matches:  8
+[SIFT] not enough matches; matches:  8
+('./test_images_citgo/citgo1.jpeg', 0.7735889702714347)
+('./test_images_citgo/citgo2.jpeg', 0.6287878787878788)
+('./test_images_citgo/citgo3.jpeg', 0.7710727969348659)
+('./test_images_citgo/citgo4.jpeg', 0.0)
+('./test_images_citgo/citgo5.jpeg', 0.0)
+('./test_images_citgo/citgo6.jpeg', 0.640294388224471)
+('./test_images_citgo/citgo7.jpeg', 0.6195652173913043)
+('./test_images_citgo/citgo8.jpeg', 0.765843179377014)
+('./test_images_citgo/citgo9.jpeg', 0.7003787878787879)
+('./test_images_citgo/citgo10.jpeg', 0.7740384615384616)
+('./test_images_citgo/citgo11.jpeg', 0.9089433826181031)
+('./test_images_citgo/citgo12.jpeg', 0.0)
+('./test_images_citgo/citgo13.jpeg', 0.0)
+('./test_images_citgo/citgo14.jpeg', 0.8659638554216867)
+python3 cv_test.py map sift
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  5
+[SIFT] not enough matches; matches:  1
+[SIFT] not enough matches; matches:  0
+[SIFT] not enough matches; matches:  1
+('./test_images_localization/map_scrap1.png', 0.0)
+('./test_images_localization/map_scrap2.png', 0.0)
+('./test_images_localization/map_scrap3.png', 0.0)
+('./test_images_localization/map_scrap4.png', 0.0)
+('./test_images_localization/map_scrap5.png', 0.0)
+('./test_images_localization/map_scrap6.png', 0.0)
+('./test_images_localization/map_scrap7.png', 0.0)
+('./test_images_localization/map_scrap8.png', 0.0)
+('./test_images_localization/map_scrap9.png', 0.0)
+template tests
+python3 cv_test.py cone template
+('./test_images_cone/test1.jpg', 0.9706281624089843)
+('./test_images_cone/test2.jpg', 0.01933318415752965)
+('./test_images_cone/test3.jpg', 0.0)
+('./test_images_cone/test4.jpg', 0.3522627992311725)
+('./test_images_cone/test5.jpg', 0.0)
+('./test_images_cone/test6.jpg', 0.2543108122763258)
+('./test_images_cone/test7.jpg', 0.0)
+('./test_images_cone/test8.jpg', 0.8868479059515062)
+('./test_images_cone/test9.jpg', 0.0)
+('./test_images_cone/test10.jpg', 0.0)
+('./test_images_cone/test11.jpg', 0.0)
+('./test_images_cone/test12.jpg', 0.0)
+('./test_images_cone/test13.jpg', 0.0)
+('./test_images_cone/test14.jpg', 0.0)
+('./test_images_cone/test15.jpg', 0.0)
+('./test_images_cone/test16.jpg', 0.0)
+('./test_images_cone/test17.jpg', 0.0)
+('./test_images_cone/test18.jpg', 0.0)
+('./test_images_cone/test19.jpg', 0.8928355196770938)
+('./test_images_cone/test20.jpg', 0.0)
+python3 cv_test.py map template
+('./test_images_localization/map_scrap1.png', 0.6035714285714285)
+('./test_images_localization/map_scrap2.png', 0.481651376146789)
+('./test_images_localization/map_scrap3.png', 0.905727923627685)
+('./test_images_localization/map_scrap4.png', 0.8822371012209531)
+('./test_images_localization/map_scrap5.png', 0.7962413452027696)
+('./test_images_localization/map_scrap6.png', 0.868421052631579)
+('./test_images_localization/map_scrap7.png', 0.5555555555555556)
+('./test_images_localization/map_scrap8.png', 0.0)
+('./test_images_localization/map_scrap9.png', 0.9003831417624522)
+python3 cv_test.py citgo template
+('./test_images_citgo/citgo1.jpeg', 0.6633906633906634)
+('./test_images_citgo/citgo2.jpeg', 0.7730409446403925)
+('./test_images_citgo/citgo3.jpeg', 0.8319553534518396)
+('./test_images_citgo/citgo4.jpeg', 0.0)
+('./test_images_citgo/citgo5.jpeg', 0.0)
+('./test_images_citgo/citgo6.jpeg', 0.7171824973319103)
+('./test_images_citgo/citgo7.jpeg', 0.6050125313283208)
+('./test_images_citgo/citgo8.jpeg', 0.8144049894376824)
+('./test_images_citgo/citgo9.jpeg', 0.008153404801449495)
+('./test_images_citgo/citgo10.jpeg', 0.8476658476658476)
+('./test_images_citgo/citgo11.jpeg', 0.872471098265896)
+('./test_images_citgo/citgo12.jpeg', 0.04361370716510903)
+('./test_images_citgo/citgo13.jpeg', 0.0)
+('./test_images_citgo/citgo14.jpeg', 0.03326047705027083)

@@ -69,7 +69,22 @@ def cd_sift_ransac(img, template):
 
         ########## YOUR CODE STARTS HERE ##########
 
-        x_min = y_min = x_max = y_max = 0
+        # x_min = y_min = x_max = y_max = 0
+
+        homography_transformed_points = cv2.perspectiveTransform(pts, M)
+
+        xs = homography_transformed_points[:, :, 0]
+        ys = homography_transformed_points[:, :, 1]
+
+        x_min_exact = min(xs)
+        y_min_exact = min(ys)
+        x_max_exact = max(xs)
+        y_max_exact = max(ys)
+
+        x_min = int(x_min_exact)
+        y_min = int(y_min_exact)
+        x_max = int(x_max_exact)
+        y_max = int(y_max_exact)
 
         ########### YOUR CODE ENDS HERE ###########
 
@@ -116,9 +131,19 @@ def cd_template_matching(img, template):
         # Use OpenCV template matching functions to find the best match
         # across template scales.
 
+        convolution = cv2.matchTemplate(img_canny, resized_template, cv2.TM_CCOEFF_NORMED)
+
+        _, maxVal, _, maxLoc = cv2.minMaxLoc(convolution)
+
+        if best_match is None or best_match < maxVal:
+            best_match = maxVal
+            bounding_box = ((maxLoc[0],maxLoc[1]),(maxLoc[0]+w,maxLoc[1]+h))
+        else:
+            continue
+
         # Remember to resize the bounding box using the highest scoring scale
         # x1,y1 pixel will be accurate, but x2,y2 needs to be correctly scaled
-        bounding_box = ((0,0),(0,0))
+        # bounding_box = ((best_match[1][0],best_match[1][1]),(best_match[1][0],0))
         ########### YOUR CODE ENDS HERE ###########
 
     return bounding_box
