@@ -1,10 +1,24 @@
 import cv2
 import numpy as np
+import os
+
+# Ensure the folder exists
+SAVE_DIR = "color_segmentation_tests_images"
+if not os.path.exists(SAVE_DIR):
+    os.makedirs(SAVE_DIR)
+
+# Global counter for naming images
+image_counter = 0
 
 def image_print(img):
     """
     Helper function to display images for debugging. Press any key to continue.
     """
+    global image_counter
+    image_counter += 1
+    filename = os.path.join(SAVE_DIR, f"test_cone_{image_counter}.png")
+    cv2.imwrite(filename, img)  # Save the image
+
     cv2.imshow("image", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
