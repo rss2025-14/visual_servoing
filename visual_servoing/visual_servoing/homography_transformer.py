@@ -68,6 +68,7 @@ class HomographyTransformer(Node):
         self.get_logger().info("Homography Transformer Initialized")
 
         self.mouse_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_click_callback, 10)
+        self.get_logger().info("Subscribed to /zed/zed_node/rgb/image_rect_color_mouse_left")
 
     def mouse_click_callback(self, msg):
         """Handle mouse clicks to test the homography transformation"""
