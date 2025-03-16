@@ -11,6 +11,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from ackermann_msgs.msg import AckermannDriveStamped
 from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point
 from vs_msgs.msg import ConeLocation, ConeLocationPixel
 
 #The following collection of pixel locations and corresponding relative
@@ -20,22 +21,22 @@ from vs_msgs.msg import ConeLocation, ConeLocationPixel
 # see README.md for coordinate frame description
 
 ######################################################
-## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_IMAGE_PLANE = [[-1, -1],
-                   [-1, -1],
-                   [-1, -1],
-                   [-1, -1]] # dummy points
+## Pixel measurements from the image plane
+PTS_IMAGE_PLANE = [[204.0, 256.0],
+                   [457.0, 256.0],
+                   [148.0, 219.0],
+                   [490.0, 216.0]] 
 ######################################################
 
 # PTS_GROUND_PLANE units are in inches
 # car looks along positive x axis with positive y axis to left
 
 ######################################################
-## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_GROUND_PLANE = [[-1, -1],
-                    [-1, -1],
-                    [-1, -1],
-                    [-1, -1]] # dummy points
+## Real world measurements from the ground plane starting at the camera, using letter-sized paper
+PTS_GROUND_PLANE = [[11.0, 8.5],
+                    [11.0, -8.5],
+                    [22.0, 17.0],
+                    [22.0, -17.0]] 
 ######################################################
 
 METERS_PER_INCH = 0.0254
@@ -65,6 +66,26 @@ class HomographyTransformer(Node):
         self.h, err = cv2.findHomography(np_pts_image, np_pts_ground)
 
         self.get_logger().info("Homography Transformer Initialized")
+
+        self.mouse_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_click_callback, 10)
+        self.get_logger().info("Subscribed to /zed/zed_node/rgb/image_rect_color_mouse_left")
+
+    def mouse_click_callback(self, msg):
+        """Handle mouse clicks to test the homography transformation"""
+        try:
+            u = float(msg.x)
+            v = float(msg.y)
+            
+            # Transform pixel coordinates to ground plane coordinates
+            x, y = self.transformUvToXy(u, v)
+            
+            # Draw a marker at the transformed position
+            self.draw_marker(x, y, "odom")
+            
+            # Log the transformation results
+            self.get_logger().info(f"Clicked at pixel ({u}, {v}), transformed to ({x:.3f}, {y:.3f}) meters")
+        except Exception as e:
+            self.get_logger().error(f"Error processing mouse click: {e}")
 
     def cone_detection_callback(self, msg):
         #Extract information from message
