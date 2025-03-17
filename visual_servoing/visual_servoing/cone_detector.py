@@ -60,7 +60,7 @@ class ConeDetector(Node):
         bbox = cd_color_segmentation(image)
         bottom_v = bbox[1][1]
         bottom_center_u = (bbox[0][0] + bbox[1][0]) // 2
-        cpx.u, cpx.v = bottom_center_u, bottom_v
+        cpx.u, cpx.v = float(bottom_center_u), float(bottom_v)
         self.cone_pub.publish(cpx)
 
         # Publish the image with the bounding box drawn on it
