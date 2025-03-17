@@ -30,7 +30,7 @@ class ParkingController(Node):
         self.relative_x = 0
         self.relative_y = 0
 
-        self.relative_x_allowed_error_meters = 0.1 * self.parking_distance
+        self.relative_x_allowed_error_meters = 0.15 * self.parking_distance
         # Starting with +- 10 degrees
         self.relative_y_allowed_error_degrees = 10
 
@@ -46,6 +46,9 @@ class ParkingController(Node):
         self.relative_x = msg.x_pos
         self.relative_y = msg.y_pos
         drive_cmd = AckermannDriveStamped()
+
+        # temp_reorientation
+        self.relative_y = -msg.y_pos
 
         #################################
 
@@ -84,7 +87,7 @@ class ParkingController(Node):
         pd_derivative = (pd_error - self.prev_pd_error) / dt
 
         # Check if already at desired state already and if not steer
-        if np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters and np.abs(current_angle_from_dest) <= self.relative_y_allowed_error_degrees:
+        if (np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters) and (np.abs(current_angle_from_dest) <= self.relative_y_allowed_error_degrees):
             speed_cmd = 0
             steering_angle = 0
         elif np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters:
@@ -103,6 +106,13 @@ class ParkingController(Node):
 
         drive_cmd.drive.speed = float(speed_cmd)
         drive_cmd.drive.steering_angle = float(steering_angle)
+        print(f"({msg.x_pos}, {msg.y_pos}): {drive_cmd.drive.speed=}")
+        print(f"({msg.x_pos}, {msg.y_pos}): {drive_cmd.drive.steering_angle=}")
+        print(f"({msg.x_pos}, {msg.y_pos}): {current_distance_to_dest=}")
+        print(f"({msg.x_pos}, {msg.y_pos}): {self.relative_x=}")
+        print(f"({msg.x_pos}, {msg.y_pos}): {self.parking_distance=}")
+        print(f"({msg.x_pos}, {msg.y_pos}): condition 1:{np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters=}")
+        print(f"({msg.x_pos}, {msg.y_pos}): condition 2:{np.abs(current_angle_from_dest) <= self.relative_y_allowed_error_degrees=}")
 
         #################################
 
