@@ -38,6 +38,12 @@ class ParkingController(Node):
         self.max_steer_angle = 0.34
         self.backward_count = 0
 
+        # Used for PD control of speed
+        # self.Kp = 0.9
+        # self.Kd = 0.1 
+        # self.prev_dist_err = 0.0
+        # self.prev_time = self.get_clock().now()
+
         self.get_logger().info("Parking Controller Initialized")
 
     def find_ref_point(self, cx, cy):
@@ -72,11 +78,25 @@ class ParkingController(Node):
         dist_err = c_dist - self.parking_distance
         eta = np.arctan2(ry, rx) 
 
+        # PD control of speed
+        # current_time = self.get_clock().now()
+        # dt = (current_time.nanoseconds - self.prev_time.nanoseconds) * 1e-9
+        # if dt <= 1e-6:
+        #     dt = 1e-6
+
+        # dist_err_derivative = (dist_err - self.prev_dist_err) / dt
+        # speed_pd = self.Kp * dist_err + self.Kd * dist_err_derivative
+        # speed_pd = max(0.0, min(speed_pd, 1.0)) 
+
+        # self.prev_time = current_time
+        # self.prev_dist_err = dist_err
+
         # If the robot is outside of 0.01 meters from the cone, move towards the cone with pure pursuit
         # Else if the robot is within 0.01 meters from the cone, stop and align with the cone
         if self.mb is False:
             if dist_err > 0.01:
                 speed= 1.0
+                # speed = speed_pd
                 steer_angle = np.arctan2(2*np.sin(eta)*L, L1)  
             else:
                 cone_angle = np.arctan2(self.relative_y, self.relative_x)
