@@ -48,7 +48,7 @@ class ParkingController(Node):
         drive_cmd = AckermannDriveStamped()
 
         # temp_reorientation
-        self.relative_y = -msg.y_pos
+        # self.relative_y = -msg.y_pos
 
         #################################
 
@@ -91,12 +91,12 @@ class ParkingController(Node):
             speed_cmd = 0
             steering_angle = 0
         elif np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters:
-            steering_angle = -(self.Kp * pd_error + self.Kd * pd_derivative)
+            steering_angle = (self.Kp * pd_error + self.Kd * pd_derivative)
             max_steering = 0.34
             steering_angle = max(-max_steering, min(max_steering, steering_angle))
             speed_cmd = -self.VELOCITY
         else:
-            steering_angle = -(self.Kp * pd_error + self.Kd * pd_derivative)
+            steering_angle = (self.Kp * pd_error + self.Kd * pd_derivative)
             max_steering = 0.34
             steering_angle = max(-max_steering, min(max_steering, steering_angle))
             speed_cmd = self.VELOCITY * np.sign(current_distance_to_dest) # if in front of parking distance, it will start moving backward
