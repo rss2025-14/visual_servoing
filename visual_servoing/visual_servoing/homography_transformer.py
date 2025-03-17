@@ -80,7 +80,7 @@ class HomographyTransformer(Node):
             x, y = self.transformUvToXy(u, v)
             
             # Draw a marker at the transformed position
-            self.draw_marker(x, y, "odom")
+            self.draw_marker(x, y, "base_link")
             
             # Log the transformation results
             self.get_logger().info(f"Clicked at pixel ({u}, {v}), transformed to ({x:.3f}, {y:.3f}) meters")

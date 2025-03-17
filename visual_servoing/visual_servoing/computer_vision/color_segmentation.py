@@ -104,6 +104,6 @@ def cd_color_segmentation(img, template=None):
             cv2.putText(img, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
     # Show the image with the bounding box and color text
-    image_print(img)
+    # image_print(img)
 
     return best_bbox

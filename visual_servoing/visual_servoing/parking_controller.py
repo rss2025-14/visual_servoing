@@ -94,7 +94,7 @@ class ParkingController(Node):
         # Else if the robot is within 0.01 meters from the cone, stop and align with the cone
         if self.mb is False:
             if dist_err > 0.01:
-                speed= 1.0
+                speed= 0.5
                 # speed = speed_pd
                 steer_angle = np.arctan2(2*np.sin(eta)*L, L1)  
             else:
@@ -104,7 +104,7 @@ class ParkingController(Node):
                 speed= 0.0
                 steer_angle = 0.0
         else:
-            speed = -1.0
+            speed = -0.5
             if dist_err < 0.1:
                 steer_angle = -1 * np.sign(ry) * (self.max_steer_angle) # Reverse in opposite angle direction to cone
             else:
