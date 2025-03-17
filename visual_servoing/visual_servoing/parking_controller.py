@@ -36,7 +36,6 @@ class ParkingController(Node):
         # Used for realignment
         self.mb = False # Boolean used to reverse when robot is close to cone but not facing it
         self.max_steer_angle = 0.34
-        self.backward_count = 0
 
         # Used for PD control of speed
         # self.Kp = 0.9
@@ -105,8 +104,13 @@ class ParkingController(Node):
                 speed= 0.0
                 steer_angle = 0.0
         else:
-            pass #TODO Implement realignment
-
+            speed = -1.0
+            if dist_err < 0.1:
+                steer_angle = -1 * np.sign(ry) * (self.max_steer_angle) # Reverse in opposite angle direction to cone
+                self.get_logger().info(str(steer_angle))
+            else:
+                self.mb = False
+                steer_angle = 0.0
 
         drive_cmd.header.stamp = self.get_clock().now().to_msg()
         drive_cmd.header.frame_id = "base_link"
