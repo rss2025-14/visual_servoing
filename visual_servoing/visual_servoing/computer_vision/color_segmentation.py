@@ -58,8 +58,8 @@ def cd_color_segmentation(img, template=None):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Define the range for orange color in HSV
-    lower_orange = np.array([5, 100, 100])
-    upper_orange = np.array([25, 255, 255])
+    lower_orange = np.array([0, 220, 100]) #0, 220, 102
+    upper_orange = np.array([30, 255, 255]) #45, 255, 255
 
     # Create a mask
     mask = cv2.inRange(hsv, lower_orange, upper_orange)
