@@ -16,103 +16,105 @@ class ParkingController(Node):
     def __init__(self):
         super().__init__("parking_controller")
 
-        self.declare_parameter("drive_topic")
+        self.declare_parameter("drive_topic", "/drive")
         DRIVE_TOPIC = self.get_parameter("drive_topic").value # set in launch file; different for simulator vs racecar
 
         self.drive_pub = self.create_publisher(AckermannDriveStamped, DRIVE_TOPIC, 10)
         self.error_pub = self.create_publisher(ParkingError, "/parking_error", 10)
 
-        self.create_subscription(ConeLocation, "/relative_cone",
+        self.create_subscription(ConeLocation, "/relative_cone", 
             self.relative_cone_callback, 1)
 
         self.parking_distance = .75 # meters; try playing with this number!
-        self.VELOCITY = 0.5 # "Please keep your desired velocities below 1 (meters/sec). Even though the simulator will behave at higher speeds, your real robot will not." - quoted from lab 4 so probably listen to this
         self.relative_x = 0
         self.relative_y = 0
 
-        self.relative_x_allowed_error_meters = 0.15 * self.parking_distance
-        # Starting with +- 10 degrees
-        self.relative_y_allowed_error_degrees = 10
+        # Used for Pure Pursuit
+        self.look_ahead = 0.5 # Lookahead distance
+        self.wheelbase = 0.34 # Length of wheelbase
 
-        # PD Parameters
-        self.Kp = 0.3 # 0.3
-        self.Kd = 0.21 # 0.21
-        self.prev_pd_error = 0.0
-        self.prev_time = self.get_clock().now()
+        # Used for realignment
+        self.mb = False # Boolean used to reverse when robot is close to cone but not facing it
+        self.max_steer_angle = 0.34
+
+        # Used for PD control of speed
+        # self.Kp = 0.9
+        # self.Kd = 0.1 
+        # self.prev_dist_err = 0.0
+        # self.prev_time = self.get_clock().now()
 
         self.get_logger().info("Parking Controller Initialized")
+
+    def find_ref_point(self, cx, cy):
+        """
+        Compute a reference point at `look_ahead` distance in the direction of the cone.
+        If the cone is closer than that, the reference point is the cone itself.
+        """
+        la_dist = self.look_ahead
+        cone_pos = np.array([cx, cy])
+        dist = np.sqrt(cx**2 + cy**2)
+        if dist <= la_dist:
+            return cone_pos, dist
+        else:
+            return ((cone_pos / dist) * la_dist, dist)
 
     def relative_cone_callback(self, msg):
         self.relative_x = msg.x_pos
         self.relative_y = msg.y_pos
         drive_cmd = AckermannDriveStamped()
 
-        # temp_reorientation
-        # self.relative_y = -msg.y_pos
-
         #################################
 
         # YOUR CODE HERE
         # Use relative position and your control law to set drive_cmd
 
-        # x is in front and y is to the left
-        # camera faces forward so wont be able to see cone if its behind so x >= 0
-        # probably spatial overlap also not possible so no x = 0 either
-        # higher magnitude of y means more angled from center of camera, so if driving straight, minimize this to always keep cone in camera view
-        # if distance threshold, publish a negative velocity which is backing up, but PD controller still active which means you turn as you back up automatically
+        L = self.wheelbase
+        L1 = self.look_ahead
 
-        ###################################################################################################
-        # *** Important *** Probably need to run wall follower's safety controller at same time to avoid crashing #
-        ###################################################################################################
+        # Find the next reference point to pursue and calculate distance error and angle of reference point
+        ref, c_dist = self.find_ref_point(self.relative_x, self.relative_y) 
+        rx, ry = ref
+        dist_err = c_dist - self.parking_distance
+        eta = np.arctan2(ry, rx) 
 
-        # Assume relative_x can't be negative and so it must be greater than 0 at least
+        # PD control of speed
+        # current_time = self.get_clock().now()
+        # dt = (current_time.nanoseconds - self.prev_time.nanoseconds) * 1e-9
+        # if dt <= 1e-6:
+        #     dt = 1e-6
 
-        # First calculate pd metrics cause will be logged to bag file even at desired state
+        # dist_err_derivative = (dist_err - self.prev_dist_err) / dt
+        # speed_pd = self.Kp * dist_err + self.Kd * dist_err_derivative
+        # speed_pd = max(0.0, min(speed_pd, 1.0)) 
 
-        # Get x distance in meters from parking point
-        current_distance_to_dest = self.relative_x - self.parking_distance
+        # self.prev_time = current_time
+        # self.prev_dist_err = dist_err
 
-        # Get y distance in degrees from parking state
-        if self.relative_x == 0:
-            raise Exception("ZERO_DIVISION_ERROR: self.relative_x is below 0, but should not be")
-        current_angle_from_dest = ( 180 / (2 * np.pi) ) * np.arctan(self.relative_y / self.relative_x) # Arctan defined for all inputs so long as self.relative_x isn't 0, but that would be overlap so shouldn't happen
-
-        # Calculate error for pd
-        pd_error = current_angle_from_dest # Proportional to degrees, but degrees or meters shouldnt matter. Just did this for ease of use.
-
-        now_time = self.get_clock().now()
-        dt = (now_time - self.prev_time).nanoseconds * 1e-9
-        if dt == 0:
-            dt = 1e-6
-        pd_derivative = (pd_error - self.prev_pd_error) / dt
-
-        # Check if already at desired state already and if not steer
-        if (np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters) and (np.abs(current_angle_from_dest) <= self.relative_y_allowed_error_degrees):
-            speed_cmd = 0
-            steering_angle = 0
-        elif np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters:
-            steering_angle = (self.Kp * pd_error + self.Kd * pd_derivative)
-            max_steering = 0.34
-            steering_angle = max(-max_steering, min(max_steering, steering_angle))
-            speed_cmd = -self.VELOCITY
+        # If the robot is outside of 0.01 meters from the cone, move towards the cone with pure pursuit
+        # Else if the robot is within 0.01 meters from the cone, stop and align with the cone
+        if self.mb is False:
+            if dist_err > 0.01:
+                speed= 0.5
+                # speed = speed_pd
+                steer_angle = np.arctan2(2*np.sin(eta)*L, L1)  
+            else:
+                cone_angle = np.arctan2(self.relative_y, self.relative_x)
+                if np.abs(cone_angle) > np.radians(10): 
+                    self.mb = True
+                speed= 0.0
+                steer_angle = 0.0
         else:
-            steering_angle = (self.Kp * pd_error + self.Kd * pd_derivative)
-            max_steering = 0.34
-            steering_angle = max(-max_steering, min(max_steering, steering_angle))
-            speed_cmd = self.VELOCITY * np.sign(current_distance_to_dest) # if in front of parking distance, it will start moving backward
+            speed = -0.5
+            if dist_err < 0.1:
+                steer_angle = -1 * np.sign(ry) * (self.max_steer_angle) # Reverse in opposite angle direction to cone
+            else:
+                self.mb = False
+                steer_angle = 0.0
 
-        self.prev_pd_error = pd_error
-        self.prev_time = now_time
-
-        drive_cmd.drive.speed = float(speed_cmd)
-        drive_cmd.drive.steering_angle = float(steering_angle)
-        print(f"({msg.x_pos}, {msg.y_pos}): {drive_cmd.drive.speed=}")
-        print(f"({msg.x_pos}, {msg.y_pos}): {drive_cmd.drive.steering_angle=}")
-        print(f"({msg.x_pos}, {msg.y_pos}): {current_distance_to_dest=}")
-        print(f"({msg.x_pos}, {msg.y_pos}): {self.relative_x=}")
-        print(f"({msg.x_pos}, {msg.y_pos}): {self.parking_distance=}")
-        print(f"({msg.x_pos}, {msg.y_pos}): condition 1:{np.abs(current_distance_to_dest) <= self.relative_x_allowed_error_meters=}")
-        print(f"({msg.x_pos}, {msg.y_pos}): condition 2:{np.abs(current_angle_from_dest) <= self.relative_y_allowed_error_degrees=}")
+        drive_cmd.header.stamp = self.get_clock().now().to_msg()
+        drive_cmd.header.frame_id = "base_link"
+        drive_cmd.drive.steering_angle = steer_angle
+        drive_cmd.drive.speed = speed
 
         #################################
 
@@ -130,12 +132,14 @@ class ParkingController(Node):
 
         # YOUR CODE HERE
         # Populate error_msg with relative_x, relative_y, sqrt(x^2+y^2)
-        error_msg.x_error = float(self.relative_x - self.parking_distance)
-        error_msg.y_error = float(self.relative_y)
-        error_msg.distance_error = float(np.sqrt(error_msg.x_error**2 + error_msg.y_error**2))
+
+        x, y = self.relative_x, self.relative_y
+        error_msg.x_error = x
+        error_msg.y_error = y
+        error_msg.distance_error = np.sqrt(x**2 + y**2)
 
         #################################
-
+        
         self.error_pub.publish(error_msg)
 
 def main(args=None):

@@ -41,35 +41,32 @@ class ConeDetector(Node):
         # publish this pixel (u, v) to the /relative_cone_px topic; the homography transformer will
         # convert it to the car frame.
 
-        image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
-
         #################################
         # YOUR CODE HERE
-        bounding_box=cd_color_segmentation(image)
-
-        if bounding_box != ((0,0),(0,0)):
-            x1 = bounding_box[0][0]
-            x2 = bounding_box[1][0]
-            y1 = bounding_box[0][1]
-            y2 = bounding_box[1][1]
-
-        out_msg = ConeLocationPixel()
-
-        # pixels are ints, so //2 not /2 ???
-        center_pixel_coords = ((x1+x2)//2, y2)
-
-        cone_detect_out_msg.u = center_pixel_coords[0]
-        cone_detect_out_msg.v = center_pixel_coords[1]
-
-        self.cone_pub.publish(cone_detect_out_msg)
-
         # detect the cone and publish its
         # pixel location in the image.
         # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
         #################################
 
-        # image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
+        image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
 
+        cpx = ConeLocationPixel()
+
+        if self.LineFollower:
+            cv2.rectangle(image, (0, 0), (640, 180), (255, 255, 255), -1) # Only show bottom 50%-75% of image
+            cv2.rectangle(image, (0, 270), (640, 360), (255, 255, 255), -1)
+
+        # Find orange object in the image
+        bbox = cd_color_segmentation(image)
+        bottom_v = bbox[1][1]
+        bottom_center_u = (bbox[0][0] + bbox[1][0]) // 2
+        cpx.u, cpx.v = bottom_center_u, bottom_v
+        self.cone_pub.publish(cpx)
+
+        # Publish the image with the bounding box drawn on it
+        bbox_top_left = bbox[0][0], bbox[0][1]
+        bbox_bottom_right = bbox[1][0], bbox[1][1]
+        cv2.rectangle(image, bbox_top_left, bbox_bottom_right, (0, 255, 0), 2)
         debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
         self.debug_pub.publish(debug_msg)
 
