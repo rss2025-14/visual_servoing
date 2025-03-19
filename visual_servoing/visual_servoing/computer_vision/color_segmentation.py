@@ -3,21 +3,21 @@ import numpy as np
 import os
 
 # Ensure the folder exists
-SAVE_DIR = "color_segmentation_tests_images"
-if not os.path.exists(SAVE_DIR):
-    os.makedirs(SAVE_DIR)
+# SAVE_DIR = "color_segmentation_tests_images"
+# if not os.path.exists(SAVE_DIR):
+   # os.makedirs(SAVE_DIR)
 
 # Global counter for naming images
-image_counter = 0
+# image_counter = 0
 
 def image_print(img):
     """
     Helper function to display images for debugging. Press any key to continue.
     """
-    global image_counter
-    image_counter += 1
-    filename = os.path.join(SAVE_DIR, f"test_cone_{image_counter}.png")
-    cv2.imwrite(filename, img)  # Save the image
+    # global image_counter
+    # image_counter += 1
+    # filename = os.path.join(SAVE_DIR, f"test_cone_{image_counter}.png")
+    # cv2.imwrite(filename, img)  # Save the image
 
     cv2.imshow("image", img)
     cv2.waitKey(0)
@@ -58,8 +58,11 @@ def cd_color_segmentation(img, template=None):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     # Define the range for orange color in HSV
-    lower_orange = np.array([10, 100, 100])
-    upper_orange = np.array([25, 255, 255])
+    lower_orange = np.array([5, 170, 170])
+    upper_orange = np.array([20, 255, 255])
+
+    # lower_orange = np.array([0, 220, 100])  
+    # upper_orange = np.array([30, 255, 255])
 
     # Create a mask
     mask = cv2.inRange(hsv, lower_orange, upper_orange)
@@ -104,6 +107,6 @@ def cd_color_segmentation(img, template=None):
             cv2.putText(img, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
     # Show the image with the bounding box and color text
-    image_print(img)
+    # image_print(img)
 
     return best_bbox

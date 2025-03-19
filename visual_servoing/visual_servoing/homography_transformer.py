@@ -3,7 +3,6 @@
 import rclpy
 from rclpy.node import Node
 import numpy as np
-
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -14,29 +13,28 @@ from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
 from vs_msgs.msg import ConeLocation, ConeLocationPixel
 
-#The following collection of pixel locations and corresponding relative
-#ground plane locations are used to compute our homography matrix
+# The following collection of pixel locations and corresponding relative
+# ground plane locations are used to compute our homography matrix
 
 # PTS_IMAGE_PLANE units are in pixels
 # see README.md for coordinate frame description
-
 ######################################################
-## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_IMAGE_PLANE = [[-1, -1],
-                   [-1, -1],
-                   [-1, -1],
-                   [-1, -1]] # dummy points
+## Pixel measurements from the image plane
+PTS_IMAGE_PLANE = [[204.0, 256.0],
+                   [457.0, 256.0],
+                   [148.0, 219.0],
+                   [490.0, 216.0]] 
 ######################################################
 
 # PTS_GROUND_PLANE units are in inches
 # car looks along positive x axis with positive y axis to left
 
 ######################################################
-## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_GROUND_PLANE = [[-1, -1],
-                    [-1, -1],
-                    [-1, -1],
-                    [-1, -1]] # dummy points
+## Real world measurements from the ground plane starting at the camera, using letter-sized paper
+PTS_GROUND_PLANE = [[11.0, 8.5],
+                    [11.0, -8.5],
+                    [22.0, 17.0],
+                    [22.0, -17.0]] 
 ######################################################
 
 METERS_PER_INCH = 0.0254
@@ -53,8 +51,7 @@ class HomographyTransformer(Node):
         if not len(PTS_GROUND_PLANE) == len(PTS_IMAGE_PLANE):
             rclpy.logerr("ERROR: PTS_GROUND_PLANE and PTS_IMAGE_PLANE should be of same length")
 
-        #Initialize data into a homography matrix
-
+        # Initialize data into a homography matrix
         np_pts_ground = np.array(PTS_GROUND_PLANE)
         np_pts_ground = np_pts_ground * METERS_PER_INCH
         np_pts_ground = np.float32(np_pts_ground[:, np.newaxis, :])
@@ -67,10 +64,25 @@ class HomographyTransformer(Node):
 
         self.get_logger().info("Homography Transformer Initialized")
 
+        # Subscription to mouse click events (points)
         self.mouse_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_click_callback, 10)
+        self.get_logger().info("Subscribed to /zed/zed_node/rgb/image_rect_color_mouse_left")
+
+        # Subscription to the image to extract HSV values on click
+        self.bridge = CvBridge()
+        self.latest_image = None
+        self.image_sub = self.create_subscription(Image, "/zed/zed_node/rgb/image_rect_color", self.image_callback, 10)
+        self.get_logger().info("Subscribed to /zed/zed_node/rgb/image_rect_color")
+
+    def image_callback(self, msg):
+        """Callback to update the latest image."""
+        try:
+            self.latest_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        except CvBridgeError as e:
+            self.get_logger().error(f"Failed to convert image: {e}")
 
     def mouse_click_callback(self, msg):
-        """Handle mouse clicks to test the homography transformation"""
+        """Handle mouse clicks to test the homography transformation and log the HSV value of the pixel clicked."""
         try:
             u = float(msg.x)
             v = float(msg.y)
@@ -79,28 +91,41 @@ class HomographyTransformer(Node):
             x, y = self.transformUvToXy(u, v)
             
             # Draw a marker at the transformed position
-            self.draw_marker(x, y, "odom")
+            self.draw_marker(x, y, "base_link")
             
             # Log the transformation results
             self.get_logger().info(f"Clicked at pixel ({u}, {v}), transformed to ({x:.3f}, {y:.3f}) meters")
+            
+            # If an image is available, log the HSV value of the pixel clicked
+            if self.latest_image is not None:
+                # Ensure the coordinates are within image bounds
+                if int(v) < self.latest_image.shape[0] and int(u) < self.latest_image.shape[1]:
+                    # OpenCV images use [row, column] which corresponds to [v, u]
+                    bgr_pixel = self.latest_image[int(v), int(u)]
+                    # Convert the BGR pixel to HSV using cv2.cvtColor
+                    hsv_pixel = cv2.cvtColor(np.uint8([[bgr_pixel]]), cv2.COLOR_BGR2HSV)[0][0]
+                    self.get_logger().info(f"HSV value at pixel ({u}, {v}): {hsv_pixel}")
+                else:
+                    self.get_logger().warn(f"Clicked pixel ({u}, {v}) is out of image bounds.")
+            else:
+                self.get_logger().warn("No image available to extract HSV value.")
         except Exception as e:
             self.get_logger().error(f"Error processing mouse click: {e}")
 
     def cone_detection_callback(self, msg):
-        #Extract information from message
+        # Extract information from message
         u = msg.u
         v = msg.v
 
-        #Call to main function
+        # Call to main function
         x, y = self.transformUvToXy(u, v)
 
-        #Publish relative xy position of object in real world
+        # Publish relative xy position of object in real world
         relative_xy_msg = ConeLocation()
         relative_xy_msg.x_pos = x
         relative_xy_msg.y_pos = y
 
         self.cone_pub.publish(relative_xy_msg)
-
 
     def transformUvToXy(self, u, v):
         """
@@ -132,12 +157,12 @@ class HomographyTransformer(Node):
         marker.header.frame_id = message_frame
         marker.type = marker.CYLINDER
         marker.action = marker.ADD
-        marker.scale.x = .2
-        marker.scale.y = .2
-        marker.scale.z = .2
+        marker.scale.x = 0.2
+        marker.scale.y = 0.2
+        marker.scale.z = 0.2
         marker.color.a = 1.0
         marker.color.r = 1.0
-        marker.color.g = .5
+        marker.color.g = 0.5
         marker.pose.orientation.w = 1.0
         marker.pose.position.x = cone_x
         marker.pose.position.y = cone_y
@@ -150,4 +175,4 @@ def main(args=None):
     rclpy.shutdown()
 
 if __name__ == "__main__":
-    main()
+    main()    
